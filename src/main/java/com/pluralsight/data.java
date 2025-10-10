@@ -102,6 +102,6 @@ public class data {
                 time.format(TIME),
                 description,
                 vendor,
-                amount.toPlainString());
+                amount.toPlainString()) ;
     }
 }
