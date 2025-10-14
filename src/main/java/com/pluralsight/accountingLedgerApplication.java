@@ -20,7 +20,7 @@ public class accountingLedgerApplication {
                 """
         );
 
-        while (true) {
+        while (true) { // creating a loop for the main menu
             System.out.println("""
                 
                 Welcome To The Accounting Ledger:
@@ -33,9 +33,9 @@ public class accountingLedgerApplication {
                 Choose: """
             );
 
-            int choice = scanner.nextLine().trim().toUpperCase();
+            int choice = scanner.nextLine().trim().toUpperCase(); //
 
-            switch (choice) {
+            switch (choice) { //user's choice
                 case "D":
                     addDeposit();
                     break;
