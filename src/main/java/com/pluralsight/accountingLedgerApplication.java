@@ -13,7 +13,7 @@ public class accountingLedgerApplication {
     public static final String CSV_PATH = "transactions.csv";          // where we save the rows
     public static final ArrayList<data> ALL = new ArrayList<>();       // in-memory list of all rows (data objects)
 
-    // main start // what it does: load old rows, show the menu loop
+    // load old rows, show the menu loop
     public static void main(String[] args) {
         loadCsv();  // pull in any existing transactions from the csv so L can show them
 
@@ -51,7 +51,7 @@ public class accountingLedgerApplication {
         }
     }
 
-    // addDeposit // what it does: asks details and saves a positive row
+    // asks details and saves a positive row
     public static void addDeposit() {
         System.out.print("Description Of Purchase"); // per your exact string
         String desc = Scanner.nextLine().trim();
@@ -70,7 +70,7 @@ public class accountingLedgerApplication {
         System.out.println("Deposit saved.");
     }
 
-    // addPayment // what it does: asks details and saves a negative row
+    // asks details and saves a negative row
     public static void addPayment() {
         System.out.print("Description: ");
         String desc = Scanner.nextLine().trim();
@@ -89,19 +89,54 @@ public class accountingLedgerApplication {
         System.out.println("Payment saved.");
     }
 
-    // ledgerMenu // what it does: for now just shows all so L does something useful
+    // for now just shows all so L does something useful
     public static void ledgerMenu() {
-        showAll(); // simple: print everything newest first
+
+                while (true) {
+                    System.out.println("""
+                
+                Ledger Menu:
+                A) All - Display all entries
+                D) Deposits - Display only the entries that are deposits into the account
+                P) Payments - Display only the negative entries (or payments)
+                R) Reports - Run pre-defined reports or a custom search
+                H) Home - go back to the home page
+                """);
+
+                    System.out.print("Choose: ");
+                    String choice = Scanner.nextLine().trim().toUpperCase();
+
+                    switch (choice) { // classic switch version
+                        case "A":
+                            showAll();       // show everything
+                            break;
+                        case "D":
+                            showDeposits();  // show deposits only
+                            break;
+                        case "P":
+                            showPayments();  // show payments only
+                            break;
+                        case "R":
+                            reportsMenu();   // go to reports page
+                            break;
+                        case "H":
+                            return;          // go back to home screen
+                        default:
+                            System.out.println("Invalid choice."); // catch wrong inputs
+                            break;
+
+                    }
+                }
     }
 
-    // addRow // what it does: creates a data object with now() and appends to csv + memory
+    // creates a data object with now() and appends to csv + memory
     public static void addRow(String desc, String vendor, BigDecimal amount) {
         data row = data.now(desc, vendor, amount); // data.now = build row w/ current date/time
         ALL.add(row);                               // keep in memory
         appendCsv(row);                             // save to file
     }
 
-    // readMoney // what it does: keep asking till user types a valid money number
+    // keep asking till user types a valid money number
     public static BigDecimal readMoney(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -114,7 +149,7 @@ public class accountingLedgerApplication {
         }
     }
 
-    // loadCsv // what it does: read every line from transactions.csv into ALL
+    // read every line from transactions.csv into ALL
     public static void loadCsv() {
         File f = new File(CSV_PATH); // the csv file
         if (!f.exists()) return;     // no file yet = nothing to load
@@ -130,7 +165,7 @@ public class accountingLedgerApplication {
         }
     }
 
-    // appendCsv // what it does: append exactly one row to the csv file
+   // append exactly one row to the csv file
     public static void appendCsv(data row) {
         try (PrintWriter out = new PrintWriter(new FileWriter(CSV_PATH, true))) { // true = append
             out.println(row.toCsv()); // use your data.toCsv builder (date|time|desc|vendor|amount)
@@ -139,7 +174,7 @@ public class accountingLedgerApplication {
         }
     }
 
-    // showAll // what it does: prints all rows in a simple table, newest first
+   //  prints all rows in a simple table, newest first
     public static void showAll() {
         if (ALL.isEmpty()) {
             System.out.println("\n(no entries)\n");
@@ -162,4 +197,99 @@ public class accountingLedgerApplication {
         }
         System.out.println();
     }
+
+    // shows only deposit transactions (money in)
+    public static void showDeposits() {
+
+        ArrayList<data> deposits = new ArrayList<>(); // make a new list to store just deposits
+
+        // go through every transaction in ALL
+        for (data d : ALL) {
+            if (d.getAmount().compareTo(BigDecimal.ZERO) > 0) { // if amount > 0, it’s a deposit
+                deposits.add(d); // add it to our deposits list
+            }
+        }
+
+        // if no deposits, say so
+        if (deposits.isEmpty()) {
+            System.out.println("\n(No deposit entries found)\n");
+            return;
+        }
+
+        // sort them by date & time (newest first)
+        deposits.sort(
+                Comparator.comparing(data::getDate)
+                        .thenComparing(data::getTime)
+                        .reversed()
+        );
+
+        // print table header
+        System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
+        System.out.println("-----------+----------+----------------------+-------------------+-----------");
+
+        // print every deposit
+        for (data d : deposits) {
+            System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
+                    d.getDate(),
+                    d.getTime(),
+                    d.getDescription(),
+                    d.getVendor(),
+                    d.getAmount().toPlainString()); // show amount
+        }
+
+        System.out.println(); // just an empty line at end for spacing
+    }
+
+    // shows only payment transactions (money out)
+    public static void showPayments() {
+
+        ArrayList<data> payments = new ArrayList<>(); // make a new list just for payments
+
+        // go through all transactions
+        for (data d : ALL) {
+            if (d.getAmount().compareTo(BigDecimal.ZERO) < 0) { // if amount < 0 → payment
+                payments.add(d); // add it to the payments list
+            }
+        }
+
+        // if no payments found
+        if (payments.isEmpty()) {
+            System.out.println("\n(No payment entries found)\n");
+            return;
+        }
+
+        // sort newest first
+        payments.sort(
+                Comparator.comparing(data::getDate)
+                        .thenComparing(data::getTime)
+                        .reversed()
+        );
+
+        // print header row
+        System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
+        System.out.println("-----------+----------+----------------------+-------------------+-----------");
+
+        // print every payment
+        for (data d : payments) {
+            System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
+                    d.getDate(),
+                    d.getTime(),
+                    d.getDescription(),
+                    d.getVendor(),
+                    d.getAmount().toPlainString()); // show amount
+        }
+
+        System.out.println();
+    }
+
+    public static void reportsMenu() {
+
+
+
+
+
+    }
+
+
+
 }
