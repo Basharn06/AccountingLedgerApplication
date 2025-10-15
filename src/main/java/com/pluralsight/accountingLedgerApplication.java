@@ -1,6 +1,5 @@
 package com.pluralsight;
 
-import java.lang.invoke.SwitchPoint;
 import java.util.Scanner;
 import java.io.*;
 import java.math.BigDecimal;
@@ -12,7 +11,6 @@ public class accountingLedgerApplication {
     public static final Scanner Scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-
 
         System.out.println("""
                 
@@ -40,9 +38,9 @@ public class accountingLedgerApplication {
                 Choose: """
             );
 
-            int choice = Scanner.nextLine().trim().toUpperCase(); //
+            String choice = Scanner.nextLine().trim().toUpperCase(); // read choice
 
-            switch (choice) { //user's choice
+            switch (choice) { // user's choice
                 case "D":
                     addDeposit();
                     break;
@@ -60,10 +58,9 @@ public class accountingLedgerApplication {
             }
         }
     }
-    public static void addDeposit() {
 
-    System.out.print("How Much Would You Like To Deposit To your Account");
-        System.out.print("Description: ");
+    public static void addDeposit() {
+        System.out.print("Description Of Purchase");
         String desc = Scanner.nextLine().trim();
         System.out.print("Vendor: ");
         String vendor = Scanner.nextLine().trim();  // ask user for the info
@@ -77,32 +74,41 @@ public class accountingLedgerApplication {
         System.out.println("Deposit saved.");
     }
 
+    public static void addPayment() {
+        System.out.print("Description: ");
+        String desc = Scanner.nextLine().trim();
+        System.out.print("Vendor: ");
+        String vendor = Scanner.nextLine().trim();
+        BigDecimal check = readMoney("Amount (positive): ");
 
-}
-}
-
-
-
-
-    public static void addPayment()
-
-
-
-
-
+        if (check.compareTo(BigDecimal.ZERO) <= 0) {
+            System.out.println("Amount must be positive.");
+            return;
+        }
+        addRow(desc, vendor, check.negate()); // negative for payments
+        System.out.println("Payment saved.");
+    }
 
     public static void ledgerMenu() {
-
-         {
-
-
-
-
+        // (implement your ledger options here as needed)
     }
-}
 
-public static void addRow(String desc, String vendor, BigDecimal amount) {
-    Transaction t = new Transaction(LocalDate.now(), LocalTime.now().withNano(0), desc, vendor, amount);
-    ALL.add(t);
-    appendCsv(t);
+    public static void addRow(String desc, String vendor, BigDecimal amount) {
+        Transaction t = new Transaction(LocalDate.now(), LocalTime.now().withNano(0), desc, vendor, amount);
+        ALL.add(t);
+        appendCsv(t);
+    }
+
+    // this method makes reading a money value safely easier
+    public static BigDecimal readMoney(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String s = Scanner.nextLine().trim();
+            try {
+                return new BigDecimal(s);
+            } catch (Exception e) {
+                System.out.println("Enter a valid number (e.g., 123.45).");
+            }
+        }
+    }
 }
