@@ -2,10 +2,17 @@ package com.pluralsight;
 
 import java.lang.invoke.SwitchPoint;
 import java.util.Scanner;
+import java.io.*;
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.*;
 
 public class accountingLedgerApplication {
+
+    public static final Scanner Scanner = new Scanner(System.in);
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+
 
         System.out.println("""
                 
@@ -33,7 +40,7 @@ public class accountingLedgerApplication {
                 Choose: """
             );
 
-            int choice = scanner.nextLine().trim().toUpperCase(); //
+            int choice = Scanner.nextLine().trim().toUpperCase(); //
 
             switch (choice) { //user's choice
                 case "D":
@@ -53,7 +60,26 @@ public class accountingLedgerApplication {
             }
         }
     }
-    public static void addDeposit()
+    public static void addDeposit() {
+
+    System.out.print("How Much Would You Like To Deposit To your Account");
+        System.out.print("Description: ");
+        String desc = Scanner.nextLine().trim();
+        System.out.print("Vendor: ");
+        String vendor = Scanner.nextLine().trim();  // ask user for the info
+        BigDecimal Check = readMoney("Amount (positive): "); // checks
+
+        if (Check.compareTo(BigDecimal.ZERO) <= 0) { // checks to see if number is postive
+            System.out.println("Amount must be positive.");
+            return;
+        }
+        addRow(desc, vendor, Check); // positive for deposits
+        System.out.println("Deposit saved.");
+    }
+
+
+}
+}
 
 
 
@@ -73,4 +99,10 @@ public class accountingLedgerApplication {
 
 
     }
+}
+
+public static void addRow(String desc, String vendor, BigDecimal amount) {
+    Transaction t = new Transaction(LocalDate.now(), LocalTime.now().withNano(0), desc, vendor, amount);
+    ALL.add(t);
+    appendCsv(t);
 }

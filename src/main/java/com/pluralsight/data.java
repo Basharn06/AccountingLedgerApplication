@@ -13,8 +13,8 @@ public class data {
     private BigDecimal amount;
 
     // formats for saving and reading date/time
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
+    public static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     // creates a transaction with all info given
     public data(LocalDate date, LocalTime time, String description, String vendor, BigDecimal amount) {
