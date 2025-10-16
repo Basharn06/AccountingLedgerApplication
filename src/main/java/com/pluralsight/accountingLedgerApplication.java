@@ -1,23 +1,21 @@
 package com.pluralsight;
 
-import java.util.Scanner;   // Scanner = reads user typing from keyboard
-import java.io.*;           // file stuff (read/write)
-import java.math.BigDecimal; // BigDecimal = safe number for money (no rounding issues)
-import java.time.*;         // date/time (LocalDate, LocalTime)
-import java.util.*;         // ArrayList, Comparator, etc.
+import java.util.Scanner;
+import java.io.*;           // file read/write
+import java.math.BigDecimal; // money numbers
+import java.time.*;         // date/time
+import java.util.*;
 
 public class accountingLedgerApplication {
 
-    // shared stuff for the whole app
-    public static final Scanner Scanner = new Scanner(System.in);      // one Scanner for input
-    public static final String CSV_PATH = "transactions.csv";          // where we save the rows
-    public static final ArrayList<data> ALL = new ArrayList<>();       // in-memory list of all rows (data objects)
+    public static final Scanner Scanner = new Scanner(System.in); // input reader
+    public static final String CSV_PATH = "transactions.csv"; // csv file name
+    public static final ArrayList<data> ALL = new ArrayList<>(); // all transactions
 
-    // load old rows, show the menu loop
     public static void main(String[] args) {
-        loadCsv();  // pull in any existing transactions from the csv so L can show them
+        loadCsv();
 
-        while (true) { // main loop // keeps asking till user exits
+        while (true) { // main menu
             System.out.print("""
                 
                 Welcome To The Accounting Ledger:
@@ -30,70 +28,59 @@ public class accountingLedgerApplication {
                 Choose: """
             );
 
-            String choice = Scanner.nextLine().trim().toUpperCase(); // read choice (trim = remove spaces)
+            String choice = Scanner.nextLine().trim().toUpperCase();
 
-            switch (choice) { // route to the feature they picked
+            switch (choice) {
                 case "D":
-                    addDeposit(); // money in (positive)
+                    addDeposit(); // add money
                     break;
                 case "P":
-                    addPayment(); // money out (negative)
+                    addPayment(); // spend money
                     break;
                 case "L":
-                    ledgerMenu(); // show ledger screen (i’m keeping it simple)
+                    ledgerMenu(); // open ledger
                     break;
                 case "X":
                     System.out.println("Goodbye!");
-                    return; // end program
+                    return; // stop program
                 default:
                     System.out.println("Invalid choice.");
+                    break;
             }
         }
     }
 
-    // asks details and saves a positive row
-    public static void addDeposit() {
-        System.out.print("Description Of Purchase"); // per your exact string
+    public static void addDeposit() { // deposit
+        System.out.print("Description Of Purchase");
         String desc = Scanner.nextLine().trim();
-
         System.out.print("Vendor: ");
         String vendor = Scanner.nextLine().trim();
-
-        BigDecimal Check = readMoney("Amount (positive): "); // read money safely
-
-        if (Check.compareTo(BigDecimal.ZERO) <= 0) { // must be > 0 for deposit
+        BigDecimal Check = readMoney("Amount (positive): ");
+        if (Check.compareTo(BigDecimal.ZERO) <= 0) {
             System.out.println("Amount must be positive.");
             return;
         }
-
-        addRow(desc, vendor, Check); // positive = deposit
+        addRow(desc, vendor, Check); // add to list
         System.out.println("Deposit saved.");
     }
 
-    // asks details and saves a negative row
-    public static void addPayment() {
+    public static void addPayment() { // payment
         System.out.print("Description: ");
         String desc = Scanner.nextLine().trim();
-
         System.out.print("Vendor: ");
         String vendor = Scanner.nextLine().trim();
-
-        BigDecimal check = readMoney("Amount (positive): "); // user types positive
-
-        if (check.compareTo(BigDecimal.ZERO) <= 0) { // must be > 0 before we flip it
+        BigDecimal check = readMoney("Amount (positive): ");
+        if (check.compareTo(BigDecimal.ZERO) <= 0) {
             System.out.println("Amount must be positive.");
             return;
         }
-
-        addRow(desc, vendor, check.negate()); // negate = make negative for payment
+        addRow(desc, vendor, check.negate()); // make negative
         System.out.println("Payment saved.");
     }
 
-    // for now just shows all so L does something useful
-    public static void ledgerMenu() {
-
-                while (true) {
-                    System.out.println("""
+    public static void ledgerMenu() { // ledger screen
+        while (true) {
+            System.out.println("""
                 
                 Ledger Menu:
                 A) All - Display all entries
@@ -103,193 +90,221 @@ public class accountingLedgerApplication {
                 H) Home - go back to the home page
                 """);
 
-                    System.out.print("Choose: ");
-                    String choice = Scanner.nextLine().trim().toUpperCase();
+            System.out.print("Choose: ");
+            String choice = Scanner.nextLine().trim().toUpperCase();
 
-                    switch (choice) { // classic switch version
-                        case "A":
-                            showAll();       // show everything
-                            break;
-                        case "D":
-                            showDeposits();  // show deposits only
-                            break;
-                        case "P":
-                            showPayments();  // show payments only
-                            break;
-                        case "R":
-                            reportsMenu();   // go to reports page
-                            break;
-                        case "H":
-                            return;          // go back to home screen
-                        default:
-                            System.out.println("Invalid choice."); // catch wrong inputs
-                            break;
-
-                    }
-                }
+            switch (choice) {
+                case "A":
+                    showAll(); // show everything
+                    break;
+                case "D":
+                    showDeposits(); // only deposits
+                    break;
+                case "P":
+                    showPayments(); // only payments
+                    break;
+                case "R":
+                    reportsMenu(); // open reports
+                    break;
+                case "H":
+                    return; // go back
+                default:
+                    System.out.println("Invalid choice.");
+                    break;
+            }
+        }
     }
 
-    // creates a data object with now() and appends to csv + memory
-    public static void addRow(String desc, String vendor, BigDecimal amount) {
-        data row = data.now(desc, vendor, amount); // data.now = build row w/ current date/time
-        ALL.add(row);                               // keep in memory
-        appendCsv(row);                             // save to file
+    public static void addRow(String desc, String vendor, BigDecimal amount) { // add new row
+        data row = data.now(desc, vendor, amount);
+        ALL.add(row);
+        appendCsv(row);
     }
 
-    // keep asking till user types a valid money number
-    public static BigDecimal readMoney(String prompt) {
+    public static BigDecimal readMoney(String prompt) { // read valid number
         while (true) {
             System.out.print(prompt);
             String s = Scanner.nextLine().trim();
             try {
-                return new BigDecimal(s); // parse text → BigDecimal (money)
+                return new BigDecimal(s);
             } catch (Exception e) {
                 System.out.println("Enter a valid number (e.g., 123.45).");
             }
         }
     }
 
-    // read every line from transactions.csv into ALL
-    public static void loadCsv() {
-        File f = new File(CSV_PATH); // the csv file
-        if (!f.exists()) return;     // no file yet = nothing to load
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) { // open file reader
+    public static void loadCsv() { // load file
+        File f = new File(CSV_PATH);
+        if (!f.exists()) return;
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
-            while ((line = br.readLine()) != null) { // read line by line
-                data row = data.fromCsv(line);       // use your data.fromCsv parser
-                if (row != null) ALL.add(row);       // add good lines to memory
+            while ((line = br.readLine()) != null) {
+                data row = data.fromCsv(line);
+                if (row != null) ALL.add(row);
             }
         } catch (IOException ex) {
-            System.err.println("Read error: " + ex.getMessage()); // show file error
+            System.err.println("Read error: " + ex.getMessage());
         }
     }
 
-   // append exactly one row to the csv file
-    public static void appendCsv(data row) {
-        try (PrintWriter out = new PrintWriter(new FileWriter(CSV_PATH, true))) { // true = append
-            out.println(row.toCsv()); // use your data.toCsv builder (date|time|desc|vendor|amount)
+    public static void appendCsv(data row) { // write to file
+        try (PrintWriter out = new PrintWriter(new FileWriter(CSV_PATH, true))) {
+            out.println(row.toCsv());
         } catch (IOException ex) {
             System.err.println("Write error: " + ex.getMessage());
         }
     }
 
-   //  prints all rows in a simple table, newest first
-    public static void showAll() {
+    public static void showAll() { // show everything
         if (ALL.isEmpty()) {
             System.out.println("\n(no entries)\n");
             return;
         }
-
-        // make a copy and sort by date + time descending (newest first)
-        ArrayList<data> sorted = new ArrayList<>(ALL); // copy so we don’t reorder ALL
-        sorted.sort(
-                Comparator.comparing(data::getDate)
-                        .thenComparing(data::getTime)
-                        .reversed()
-        );
-
+        ArrayList<data> sorted = new ArrayList<>(ALL);
+        sorted.sort(Comparator.comparing(data::getDate)
+                .thenComparing(data::getTime)
+                .reversed());
         System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
         System.out.println("-----------+----------+----------------------+-------------------+-----------");
         for (data d : sorted) {
             System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
-                    d.getDate(), d.getTime(), d.getDescription(), d.getVendor(), d.getAmount().toPlainString());
+                    d.getDate(), d.getTime(), d.getDescription(),
+                    d.getVendor(), d.getAmount().toPlainString());
         }
         System.out.println();
     }
 
-    // shows only deposit transactions (money in)
-    public static void showDeposits() {
-
-        ArrayList<data> deposits = new ArrayList<>(); // make a new list to store just deposits
-
-        // go through every transaction in ALL
+    public static void showDeposits() { // show positive
+        ArrayList<data> deposits = new ArrayList<>();
         for (data d : ALL) {
-            if (d.getAmount().compareTo(BigDecimal.ZERO) > 0) { // if amount > 0, it’s a deposit
-                deposits.add(d); // add it to our deposits list
-            }
+            if (d.getAmount().compareTo(BigDecimal.ZERO) > 0) deposits.add(d);
         }
-
-        // if no deposits, say so
         if (deposits.isEmpty()) {
             System.out.println("\n(No deposit entries found)\n");
             return;
         }
-
-        // sort them by date & time (newest first)
-        deposits.sort(
-                Comparator.comparing(data::getDate)
-                        .thenComparing(data::getTime)
-                        .reversed()
-        );
-
-        // print table header
+        deposits.sort(Comparator.comparing(data::getDate)
+                .thenComparing(data::getTime)
+                .reversed());
         System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
         System.out.println("-----------+----------+----------------------+-------------------+-----------");
-
-        // print every deposit
         for (data d : deposits) {
             System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
-                    d.getDate(),
-                    d.getTime(),
-                    d.getDescription(),
-                    d.getVendor(),
-                    d.getAmount().toPlainString()); // show amount
+                    d.getDate(), d.getTime(), d.getDescription(),
+                    d.getVendor(), d.getAmount().toPlainString());
         }
-
-        System.out.println(); // just an empty line at end for spacing
+        System.out.println();
     }
 
-    // shows only payment transactions (money out)
-    public static void showPayments() {
-
-        ArrayList<data> payments = new ArrayList<>(); // make a new list just for payments
-
-        // go through all transactions
+    public static void showPayments() { // show negative
+        ArrayList<data> payments = new ArrayList<>();
         for (data d : ALL) {
-            if (d.getAmount().compareTo(BigDecimal.ZERO) < 0) { // if amount < 0 → payment
-                payments.add(d); // add it to the payments list
-            }
+            if (d.getAmount().compareTo(BigDecimal.ZERO) < 0) payments.add(d);
         }
-
-        // if no payments found
         if (payments.isEmpty()) {
             System.out.println("\n(No payment entries found)\n");
             return;
         }
-
-        // sort newest first
-        payments.sort(
-                Comparator.comparing(data::getDate)
-                        .thenComparing(data::getTime)
-                        .reversed()
-        );
-
-        // print header row
+        payments.sort(Comparator.comparing(data::getDate)
+                .thenComparing(data::getTime)
+                .reversed());
         System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
         System.out.println("-----------+----------+----------------------+-------------------+-----------");
-
-        // print every payment
         for (data d : payments) {
             System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
-                    d.getDate(),
-                    d.getTime(),
-                    d.getDescription(),
-                    d.getVendor(),
-                    d.getAmount().toPlainString()); // show amount
+                    d.getDate(), d.getTime(), d.getDescription(),
+                    d.getVendor(), d.getAmount().toPlainString());
         }
-
         System.out.println();
     }
 
-    public static void reportsMenu() {
+    public static void reportsMenu() { // reports
+        while (true) {
+            System.out.println("""
+                
+                Reports Menu:
+                1) Month To Date
+                2) Previous Month
+                3) Year To Date
+                4) Previous Year
+                5) Search by Vendor
+                0) Back - go back to the Ledger page
+                """);
 
+            System.out.print("Choose: ");
+            String choice = Scanner.nextLine().trim();
 
-
-
-
+            switch (choice) {
+                case "1":
+                    java.time.YearMonth thisMonth = java.time.YearMonth.now();
+                    printList(filterByMonth(thisMonth));
+                    break;
+                case "2":
+                    java.time.YearMonth prevMonth = java.time.YearMonth.now().minusMonths(1);
+                    printList(filterByMonth(prevMonth));
+                    break;
+                case "3":
+                    int thisYear = java.time.Year.now().getValue();
+                    printList(filterByYear(thisYear));
+                    break;
+                case "4":
+                    int lastYear = java.time.Year.now().minusYears(1).getValue();
+                    printList(filterByYear(lastYear));
+                    break;
+                case "5":
+                    System.out.print("Vendor name: ");
+                    String vendor = Scanner.nextLine().trim().toLowerCase();
+                    printList(filterByVendor(vendor));
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Invalid choice.");
+                    break;
+            }
+        }
     }
 
+    public static ArrayList<data> filterByMonth(java.time.YearMonth ym) { // match month
+        ArrayList<data> list = new ArrayList<>();
+        for (data d : ALL) {
+            java.time.YearMonth entryMonth = java.time.YearMonth.from(d.getDate());
+            if (entryMonth.equals(ym)) list.add(d);
+        }
+        return list;
+    }
 
+    public static ArrayList<data> filterByYear(int year) { // match year
+        ArrayList<data> list = new ArrayList<>();
+        for (data d : ALL) {
+            if (d.getDate().getYear() == year) list.add(d);
+        }
+        return list;
+    }
 
+    public static ArrayList<data> filterByVendor(String vendorLike) { // match vendor
+        ArrayList<data> list = new ArrayList<>();
+        for (data d : ALL) {
+            if (d.getVendor().toLowerCase().contains(vendorLike)) list.add(d);
+        }
+        return list;
+    }
+
+    public static void printList(ArrayList<data> list) { // print table
+        if (list.isEmpty()) {
+            System.out.println("\n(no entries)\n");
+            return;
+        }
+        list.sort(Comparator.comparing(data::getDate)
+                .thenComparing(data::getTime)
+                .reversed());
+        System.out.println("\nDate       | Time     | Description          | Vendor            | Amount");
+        System.out.println("-----------+----------+----------------------+-------------------+-----------");
+        for (data d : list) {
+            System.out.printf("%s | %-8s | %-20s | %-17s | %s%n",
+                    d.getDate(), d.getTime(), d.getDescription(),
+                    d.getVendor(), d.getAmount().toPlainString());
+        }
+        System.out.println();
+    }
 }
