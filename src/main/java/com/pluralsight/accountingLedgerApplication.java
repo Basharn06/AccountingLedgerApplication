@@ -18,7 +18,7 @@ public class accountingLedgerApplication {
         while (true) { // main menu
             System.out.print("""
                 
-                Welcome To The Accounting Ledger:
+                Welcome To The Bagel Cafe:
                 Please select one of the options below 
                 
                 D) Add Deposit 
