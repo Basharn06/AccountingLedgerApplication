@@ -51,7 +51,7 @@ public class accountingLedgerApplication {
     }
 
     public static void addDeposit() { // deposit
-        System.out.print("Description Of Purchase");
+        System.out.print("Description: ");
         String desc = Scanner.nextLine().trim();
         System.out.print("Vendor: ");
         String vendor = Scanner.nextLine().trim();
